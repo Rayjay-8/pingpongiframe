@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Display</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono:wght@400;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --accent: #e8ff3c;
+    --accent2: #ff3caa;
+    --muted: #333350;
+    --muted2: #555570;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 100; opacity: 0.4;
+  }
+
+  .ring {
+    position: fixed;
+    border-radius: 50%;
+    border: 1px solid var(--muted);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0.15;
+  }
+  .ring-1 { width: 320px; height: 320px; animation: spin 20s linear infinite; }
+  .ring-2 { width: 240px; height: 240px; animation: spin 14s linear infinite reverse; border-color: var(--accent2); opacity: 0.08; }
+
+  @keyframes spin {
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+
+  .stage {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    z-index: 10;
+  }
+
+  .number {
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(80px, 20vw, 140px);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--accent);
+    text-shadow: 0 0 60px rgba(232, 255, 60, 0.25);
+    min-width: 200px;
+    text-align: center;
+    display: none;
+  }
+
+  .number.show { display: block; }
+
+  .number.pop {
+    animation: pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes pop {
+    0%   { transform: scale(0.6); filter: blur(8px); color: #fff; text-shadow: 0 0 120px #fff; }
+    60%  { transform: scale(1.08); }
+    100% { transform: scale(1); color: var(--accent); filter: blur(0); }
+  }
+
+  .empty {
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(60px, 18vw, 120px);
+    font-weight: 700;
+    color: var(--muted2);
+    opacity: 0.35;
+    user-select: none;
+  }
+
+  .status {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--muted2);
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--muted2);
+    animation: blink 2s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+
+  .dot.active {
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .corner {
+    position: fixed;
+    width: 40px; height: 40px;
+    border-color: var(--muted2);
+    border-style: solid;
+    opacity: 0.2;
+  }
+  .corner.tl { top: 20px; left: 20px; border-width: 1px 0 0 1px; }
+  .corner.tr { top: 20px; right: 20px; border-width: 1px 1px 0 0; }
+  .corner.bl { bottom: 20px; left: 20px; border-width: 0 0 1px 1px; }
+  .corner.br { bottom: 20px; right: 20px; border-width: 0 1px 1px 0; }
+</style>
+</head>
+<body>
+
+<div class="ring ring-1"></div>
+<div class="ring ring-2"></div>
+<div class="corner tl"></div>
+<div class="corner tr"></div>
+<div class="corner bl"></div>
+<div class="corner br"></div>
+
+<div class="stage">
+  <div id="number-el" class="number"></div>
+  <div id="empty-el" class="empty">—</div>
+  <div class="status">
+    <span class="dot" id="dot"></span>
+    <span id="status-txt">aguardando sorteio</span>
+  </div>
+</div>
+
+<script>
+  const numberEl  = document.getElementById('number-el');
+  const emptyEl   = document.getElementById('empty-el');
+  const dot       = document.getElementById('dot');
+  const statusTxt = document.getElementById('status-txt');
+
+  function mostrar(numero) {
+    emptyEl.style.display = 'none';
+    numberEl.textContent = numero;
+    numberEl.classList.remove('pop');
+    void numberEl.offsetWidth; // reflow
+    numberEl.classList.add('show', 'pop');
+    dot.classList.add('active');
+    statusTxt.textContent = 'número sorteado';
+  }
+
+  // Escuta mensagens do BroadcastChannel — simples, direto, sem polling
+  const channel = new BroadcastChannel('sorteio');
+
+  channel.onmessage = (event) => {
+    if (event.data?.tipo === 'sorteio') {
+      mostrar(event.data.numero);
+    }
+  };
+</script>
+</body>
+</html>
