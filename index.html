@@ -1,14 +1,54 @@
+
+
+
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="color-scheme" content="light dark">
     <title>Document</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            /* overflow: hidden; */
+        }
+
+        .layout {
+            display: flex;
+            flex-direction: column;
+            height: 100dvh; /* usa dvh para mobile (evita barra do browser cortando) */
+        }
+
+        #showcase {
+            flex: 0 0 35%; /* display ocupa 35% da altura */
+        }
+
+        #sortear-wrap {
+            flex: 1 1 0;    /* sortear ocupa o restante (65%) */
+            min-height: 0;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+    </style>
 </head>
 <body>
-
-    <iframe src="sortear.html" frameborder="0"></iframe>
-    <iframe src="display.html" frameborder="0"></iframe>
-    
+    <div class="layout">
+        <!-- <div id="showcase">
+            <iframe id="display" src="display.html?bg=1a1a2e&accent=00ffcc"></iframe>
+        </div> -->
+        <div id="sortear-wrap">
+            <iframe id="sortear" src="sortear.html?bg=000000&accent=00ffcc"></iframe>
+        </div>
+    </div>
 </body>
 </html>

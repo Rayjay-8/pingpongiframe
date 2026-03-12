@@ -10,10 +10,10 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #0a0a0f;
-    --accent: #e8ff3c;
+    --bg:      #0a0a0f;
+    --accent:  #e8ff3c;
     --accent2: #ff3caa;
-    --muted: #555570;
+    --muted:   #555570;
   }
 
   html, body {
@@ -23,6 +23,7 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    transition: background 0.4s ease;
   }
 
   body::before {
@@ -55,9 +56,9 @@
     line-height: 1;
     min-width: 180px;
     text-align: center;
-    text-shadow: 0 0 40px rgba(232, 255, 60, 0.3);
+    text-shadow: 0 0 40px color-mix(in srgb, var(--accent) 30%, transparent);
     opacity: 0;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.2s ease, color 0.4s ease;
   }
 
   .result-display.visible { opacity: 1; }
@@ -80,7 +81,7 @@
     text-transform: uppercase;
     cursor: pointer;
     clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
-    transition: transform 0.1s ease, box-shadow 0.2s ease;
+    transition: transform 0.1s ease, box-shadow 0.2s ease, background 0.4s ease;
     box-shadow: 4px 4px 0 var(--accent2);
   }
 
@@ -126,16 +127,28 @@
 </div>
 
 <script>
-  // Abre o canal com nome compartilhado entre as páginas
+  // ── Lê parâmetros da URL e aplica como CSS variables ──────────────────────
+  const params = new URLSearchParams(location.search);
+  const root   = document.documentElement;
+
+  const varMap = {
+    bg:      '--bg',
+    accent:  '--accent',
+    accent2: '--accent2',
+    muted:   '--muted',
+  };
+
+  for (const [param, cssVar] of Object.entries(varMap)) {
+    const val = params.get(param);
+    if (val) root.style.setProperty(cssVar, `#${val}`);
+  }
+
+  // ── BroadcastChannel ──────────────────────────────────────────────────────
   const channel = new BroadcastChannel('sorteio');
 
   function sortear() {
     const numero = Math.floor(Math.random() * 100) + 1;
-
-    // Broadcast para todos os contextos do mesmo origin ouvindo 'sorteio'
     channel.postMessage({ tipo: 'sorteio', numero });
-
-    // Atualiza o próprio display local também
     atualizarDisplay(numero);
   }
 
@@ -144,7 +157,7 @@
     el.classList.remove('flash');
     el.textContent = numero;
     el.classList.add('visible');
-    void el.offsetWidth; // força reflow para reiniciar animação
+    void el.offsetWidth;
     el.classList.add('flash');
   }
 </script>
